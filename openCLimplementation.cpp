@@ -1,4 +1,27 @@
 #pragma once
+#define WINDOWS
+
+// Support for other openCl implementations
+
+// Windows Includes
+#ifdef WINDOWS
+#define clLib cl
+//#define clLibDir C:\Program Files %28x86%29\AMD APP SDK\2.9-1\lib\x86_64
+#include <CL/cl.hpp>
+#endif
+
+// MacOS includes
+#ifdef MACOS
+#define clLib cl
+#define clLibDir 
+#include <OpenCL/cl.h>
+#endif
+
+// Linux Includes
+#ifdef LINUX
+#endif
+
+// Include the header file
 #include "openCLimplementation.h"
 
 // Generates a report on all OpenCL Platforms and Devices on the platform.
@@ -6,10 +29,10 @@ void getCLinfo() {
 	std::cout << "OpenCL Platform and Device report\n";
 
 	// Creates a list for where we are going to store the platforms we find.
-	std::vector<cl::Platform> platforms;
+	std::vector<clLib::Platform> platforms;
 
 	// Gets the platforms and saves them to platforms list
-	cl::Platform::get(&platforms);
+	clLib::Platform::get(&platforms);
 
 	// If platforms is empty then throw an error
 	_ASSERT(platforms.size() > 0);
@@ -29,7 +52,7 @@ void getCLinfo() {
 		auto platform = platforms[j];
 
 		// Creates a list where we can put the devices
-		std::vector<cl::Device> devices;
+		std::vector<clLib::Device> devices;
 
 		// Looks for devices on this platform and loads them into the list devices.
 		platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
@@ -70,13 +93,13 @@ void getCLinfo() {
 auto getDevice(int platformNumber, int deviceNumber) {
 
 	// Creates a list for where we are going to store the platforms we find.
-	std::vector<cl::Platform> platforms;
+	std::vector<clLib::Platform> platforms;
 
 	// Gets the platforms and saves them to platforms list
-	cl::Platform::get(&platforms);
+	clLib::Platform::get(&platforms);
 
 	// Creates a list where we can put the devices
-	std::vector<cl::Device> devices;
+	std::vector<clLib::Device> devices;
 
 	// Looks for devices on this platform and loads them into the list devices.
 	platforms[platformNumber].getDevices(CL_DEVICE_TYPE_ALL, &devices);
@@ -89,15 +112,15 @@ auto getDevice(int platformNumber, int deviceNumber) {
 auto getDevice() {
 
 	// Creates a list for where we are going to store the platforms we find.
-	std::vector<cl::Platform> platforms;
+	std::vector<clLib::Platform> platforms;
 
 	// Gets the platforms and saves them to platforms list
-	cl::Platform::get(&platforms);
+	clLib::Platform::get(&platforms);
 
 	// Get number of platforms.
 	int numPlatforms = platforms.size();
 
-	cl::Device device;
+	clLib::Device device;
 
 	bool deviceFound = false;
 
@@ -108,7 +131,7 @@ auto getDevice() {
 		}
 
 		// Creates a list where we can put the devices
-		std::vector<cl::Device> devices;
+		std::vector<clLib::Device> devices;
 
 		// Looks for devices on this platform and loads them into the list devices.
 		platforms[j].getDevices(CL_DEVICE_TYPE_ALL, &devices);
@@ -146,13 +169,13 @@ auto getDevice() {
 }
 
 // Generates a program for for the given opencl device.
-cl::Program CreateProgram(cl::Device device, const std::string& file) {
+clLib::Program CreateProgram(clLib::Device device, const std::string& file) {
 
 	// Open up a new device context.
-	cl::Context context({ device });
+	clLib::Context context({ device });
 
 	// Define a new source.
-	cl::Program::Sources sources;
+	clLib::Program::Sources sources;
 
 	// Kernel files directory name.
 	std::string KernelDir = "KernelFiles/";
@@ -181,7 +204,7 @@ cl::Program CreateProgram(cl::Device device, const std::string& file) {
 	sources.push_back({ std::make_pair(kernel_code.c_str(),kernel_code.length()) });
 
 	// Initalize a new program object.
-	cl::Program program(context, sources);
+	clLib::Program program(context, sources);
 
 	// Try to build the program and if it fails throw an error;
 	if (program.build({ device }) != CL_SUCCESS) {
@@ -199,34 +222,51 @@ std::vector<double> mkData(double size, double defaultVal) {
 
 	//auto device = getDevice(0, 1);
 	auto device = getDevice();
-	cl::Program program = CreateProgram(device, "mkData.cl");
+	clLib::Program program = CreateProgram(device, "mkData.cl");
 	auto context = program.getInfo<CL_PROGRAM_CONTEXT>();
 
+	// Initalize a vector to return values to
 	std::vector<double> vec(size);
 
+	// Initalize a variable to catch errors
 	int err = 0;
-	cl::Buffer inBuf(context, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, sizeof(double)*vec.size(), vec.data(), &err);
+
+	// Input data buffer
+	clLib::Buffer inBuf(context, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, sizeof(double)*vec.size(), vec.data(), &err);
 	checkClError(err, "creating input buffer", "NONE");
-	cl::Buffer outBuf(context, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, sizeof(double)*vec.size(), nullptr, &err);
+
+	// Output data buffer
+	clLib::Buffer outBuf(context, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, sizeof(double)*vec.size(), nullptr, &err);
 	checkClError(err, "creating output buffer", "NONE");
-	cl::Kernel kernel(program, "opp");
+	
+	// Load the kernel
+	clLib::Kernel kernel(program, "opp");
 	checkClError(err, "initalizing a kernel", "NONE");
 
+	// Set the kernels first argument to the input buffer
 	err = kernel.setArg(0, inBuf);
 	checkClError(err, "setting kernel argument 0", "NONE");
+
+	// Set the kernels second argument to the output buffer
 	err = kernel.setArg(1, outBuf);
 	checkClError(err, "setting kernel argument 1", "NONE");
 
-	cl::CommandQueue queue(context, device);
+	// Initalize a command que
+	clLib::CommandQueue queue(context, device);
 
+	// Add Fill the input buffer with the data to the command queue
 	err = queue.enqueueFillBuffer(inBuf, defaultVal, 0, sizeof(double)*(vec.size()));
 	checkClError(err, "adding enqueueFillBuffer to the CommandQueue", std::to_string(defaultVal));
 
-	err = queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(vec.size()));
+	// Add exicution of the kernel to the command queue
+	err = queue.enqueueNDRangeKernel(kernel, clLib::NullRange, clLib::NDRange(vec.size()));
 	checkClError(err, "adding enqueueNDRangeKernel to the CommandQueue", "NONE");
+
+	// Add read the output buffer to the command queue
 	err = queue.enqueueReadBuffer(outBuf, CL_TRUE, 0, sizeof(double)*vec.size(), vec.data());
 	checkClError(err, "adding enqueueReadBuffer to the CommandQueue", "NONE");
 
+	// Wait for the queue to finish
 	queue.finish();
 
 	return vec;
@@ -323,3 +363,16 @@ void checkClError(int err, std::string opperation, std::string additionalInfo) {
 		exit(1);
 	}
 }
+
+// Forward propigate values through the network
+std::vector<double> forwardProp(WeightPackages * weights) {
+
+	std::vector<double> TMP;
+
+
+	
+	return TMP;
+}
+
+
+

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 
 class WeightPackages
@@ -254,7 +255,6 @@ public:
 		}
 	}
 
-
 	// Gets the weights for the neuron of given value
 	std::vector<int> locateNeuron(int neuronNum) {
 
@@ -265,8 +265,6 @@ public:
 			std::cin.get();
 			exit(1);
 		}
-
-		
 		
 		// Check if the ratio is a whole number.
 		if (weightsPerNeuron != double((int)weightsPerNeuron)) {
@@ -278,8 +276,6 @@ public:
 
 		// Starting location of the neurons weights
 		int sGIndex = weightsPerNeuron*(neuronNum);
-
-	
 
 		int sizeOfPkgs = pkgSizes[0];
 		
@@ -339,6 +335,19 @@ public:
 
 	}
 
+	void printOutNeturon(std::vector<double> neuron , int neuronNum) {
+		
+		std::string debugOutput = "Neuron " + std::to_string(neuronNum) + " values: [";
+		
+		for each (double val in neuron)
+		{
+			debugOutput = debugOutput + std::to_string(val) + " ";
+		}
+
+		debugOutput = debugOutput + "]";
+		std::cout << debugOutput << std::endl;
+		
+	}
 	int getSize() {
 
 		int a = weightPkg0.size();
@@ -355,7 +364,6 @@ public:
 		return a;
 
 	}
-
 };
 
 

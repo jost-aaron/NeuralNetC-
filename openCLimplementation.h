@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-#include <CL/cl.hpp>
+#include "WeightPackages.cpp"
 #include <fstream>
 #include <string>
 
@@ -16,6 +16,6 @@ auto getDevice(int platformNumber, int deviceNumber);
 
 auto getDevice();
 
-cl::Program CreateProgram(cl::Device device, const std::string& file);
+clLib::Program CreateProgram(clLib::Device device, const std::string& file);
 
 std::vector<double> mkData(double size, double defaultVal);

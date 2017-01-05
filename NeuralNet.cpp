@@ -3,10 +3,10 @@
 int main() {
 
 	// Specifying the dimentions of the network.
-	const double inputDataSize = 200.0;
-	const double numHiddenNeurons = 100.0;
-	const double numOutputDims = 200.0;
-	const double hiddenBatchSize = 2000.0;
+	const double inputDataSize = 5.0;
+	const double numHiddenNeurons = 5.0;
+	const double numOutputDims = 5.0;
+	const double hiddenBatchSize = 1000.0;
 	const double numWeightPkgs = 10.0;
 	const double hiddenBatchs = ceil((inputDataSize*numHiddenNeurons)/hiddenBatchSize);
 	std::cout.precision(20);
@@ -45,10 +45,16 @@ int main() {
 	
 	int actualSize = weights.getSize();
 
+
+
+
+
+
+
+
+
 	std::vector<double> a(weights.getNeuron(0));
-	std::vector<double> b(weights.getNeuron(1));
-	std::vector<double> c(weights.getNeuron(2));
-	std::vector<double> d(weights.getNeuron(3));
+	weights.printOutNeturon(a,0);
 
 	std::cout << "Computation info:\n";
 	std::cout << "Values initalized: " << actualSize + input.size() << "\n";
@@ -65,7 +71,7 @@ void fillWeights(int numWeightPkgs,double inputDataSize,double numHiddenNeurons,
 
 	for (int j = 0; j <= numWeightPkgs - 1; j++) {
 
-		std::cout << "    *Generating package: (" << j + 1 << "/"<< (int)hiddenBatchs+1 << ")\n";
+		std::cout << "    *Generating package: (" << j + 1 << "/"<< (int)hiddenBatchs << ")\n";
 
 		double numLeft = inputDataSize*numHiddenNeurons - j*hiddenBatchSize;
 
